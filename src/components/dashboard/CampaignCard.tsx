@@ -1,0 +1,136 @@
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Eye, Calendar, DollarSign, MoreVertical } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface CampaignCardProps {
+  id: string;
+  title: string;
+  status: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  price: number;
+  views?: number;
+  createdAt: string;
+  businessName?: string;
+  onView?: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
+  showActions?: boolean;
+  isBusinessView?: boolean;
+}
+
+const statusStyles: Record<string, string> = {
+  draft: 'status-draft',
+  pending: 'status-pending',
+  approved: 'status-approved',
+  sent: 'status-approved',
+  live: 'status-live',
+  completed: 'status-completed',
+};
+
+const CampaignCard: React.FC<CampaignCardProps> = ({
+  title,
+  status,
+  mediaUrl,
+  mediaType,
+  price,
+  views = 0,
+  createdAt,
+  businessName,
+  onView,
+  onApprove,
+  onReject,
+  showActions = false,
+  isBusinessView = false,
+}) => {
+  const formattedDate = new Date(createdAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  return (
+    <div className="dashboard-card group animate-fade-in">
+      <div className="flex flex-col sm:flex-row gap-4">
+        {/* Media preview */}
+        <div className="w-full sm:w-32 h-32 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+          {mediaUrl ? (
+            mediaType === 'video' ? (
+              <video 
+                src={mediaUrl} 
+                className="w-full h-full object-cover"
+                muted
+              />
+            ) : (
+              <img 
+                src={mediaUrl} 
+                alt={title} 
+                className="w-full h-full object-cover"
+              />
+            )
+          ) : (
+            <div className="text-muted-foreground text-sm">No media</div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h3 className="font-semibold text-foreground truncate">{title}</h3>
+              {businessName && (
+                <p className="text-sm text-muted-foreground mt-0.5">{businessName}</p>
+              )}
+            </div>
+            <Badge className={cn('status-badge', statusStyles[status] || 'status-draft')}>
+              {status}
+            </Badge>
+          </div>
+
+          <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <DollarSign className="h-4 w-4" />
+              <span>₹{price.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Eye className="h-4 w-4" />
+              <span>{views.toLocaleString()} views</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
+              <span>{formattedDate}</span>
+            </div>
+          </div>
+
+          {showActions && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {onView && (
+                <Button variant="outline" size="sm" onClick={onView}>
+                  View Details
+                </Button>
+              )}
+              {isBusinessView && status === 'pending' && (
+                <>
+                  {onApprove && (
+                    <Button size="sm" onClick={onApprove} className="btn-gradient">
+                      Approve
+                    </Button>
+                  )}
+                  {onReject && (
+                    <Button variant="destructive" size="sm" onClick={onReject}>
+                      Reject
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CampaignCard;
