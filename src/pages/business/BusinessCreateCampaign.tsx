@@ -175,13 +175,13 @@ const BusinessCreateCampaign = () => {
                 <Label htmlFor="mediaUrl">Media URL</Label>
                 <Input
                   id="mediaUrl"
-                  placeholder="https://example.com/your-promo-image.jpg"
+                  placeholder="https://i.imgur.com/example.jpg"
                   value={formData.mediaUrl}
                   onChange={(e) => setFormData({ ...formData, mediaUrl: e.target.value })}
                   className="input-focus"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Provide a direct link to your promotional image or video
+                  Use a direct image link (ending in .jpg, .png, .gif). For Unsplash, right-click the image and copy image address.
                 </p>
               </div>
 
