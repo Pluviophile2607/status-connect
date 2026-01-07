@@ -9,6 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Search, FileText, Loader2, Plus } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Campaign {
   id: string;
@@ -31,6 +41,8 @@ const BusinessCampaigns = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCampaigns = async () => {
@@ -88,8 +100,8 @@ const BusinessCampaigns = () => {
 
       if (error) throw error;
 
-      // Create payment record when approving
-      if (campaign) {
+      // Create payment record and agent earnings when approving
+      if (campaign && campaign.agent_id) {
         const { data: businessData } = await supabase
           .from('businesses')
           .select('id')
@@ -97,11 +109,19 @@ const BusinessCampaigns = () => {
           .single();
 
         if (businessData) {
+          // Create payment record
           await supabase.from('payments').insert({
             campaign_id: campaignId,
             business_id: businessData.id,
             amount: campaign.price,
             payment_status: 'unpaid',
+          });
+
+          // Create agent earnings record
+          await supabase.from('agent_earnings').insert({
+            campaign_id: campaignId,
+            agent_id: campaign.agent_id,
+            commission_amount: campaign.price,
           });
         }
       }
@@ -146,6 +166,47 @@ const BusinessCampaigns = () => {
         description: error.message || "Failed to reject campaign",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteClick = (campaignId: string) => {
+    setCampaignToDelete(campaignId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!campaignToDelete) return;
+
+    try {
+      // First delete related campaign_analytics
+      await supabase
+        .from('campaign_analytics')
+        .delete()
+        .eq('campaign_id', campaignToDelete);
+
+      // Then delete the campaign
+      const { error } = await supabase
+        .from('campaigns')
+        .delete()
+        .eq('id', campaignToDelete);
+
+      if (error) throw error;
+
+      setCampaigns(campaigns.filter(c => c.id !== campaignToDelete));
+
+      toast({
+        title: "Campaign deleted",
+        description: "The campaign has been removed successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete campaign",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setCampaignToDelete(null);
     }
   };
 
@@ -243,7 +304,7 @@ const BusinessCampaigns = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredCampaigns.map((campaign) => (
+        {filteredCampaigns.map((campaign) => (
               <CampaignCard
                 key={campaign.id}
                 id={campaign.id}
@@ -254,14 +315,32 @@ const BusinessCampaigns = () => {
                 price={Number(campaign.price)}
                 views={campaign.campaign_analytics?.views || 0}
                 createdAt={campaign.created_at}
-                showActions={campaign.status === 'pending_review'}
+                showActions
                 isBusinessView
                 onApprove={() => handleApprove(campaign.id)}
                 onReject={() => handleReject(campaign.id)}
+                onDelete={() => handleDeleteClick(campaign.id)}
               />
             ))}
           </div>
         )}
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this campaign? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

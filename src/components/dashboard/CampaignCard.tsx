@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Calendar, DollarSign } from 'lucide-react';
+import { Eye, Calendar, DollarSign, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CampaignCardProps {
@@ -18,6 +18,7 @@ interface CampaignCardProps {
   onView?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
+  onDelete?: () => void;
   showActions?: boolean;
   isBusinessView?: boolean;
 }
@@ -57,6 +58,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
   onView,
   onApprove,
   onReject,
+  onDelete,
   showActions = false,
   isBusinessView = false,
 }) => {
@@ -142,6 +144,12 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
                     </Button>
                   )}
                 </>
+              )}
+              {isBusinessView && onDelete && (
+                <Button variant="outline" size="sm" onClick={onDelete} className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
               )}
             </div>
           )}
