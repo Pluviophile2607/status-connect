@@ -7,24 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, Loader2, Image, Video } from 'lucide-react';
+import { ArrowLeft, Loader2, Image, Video } from 'lucide-react';
 
-interface Business {
-  id: string;
-  business_name: string;
-  whatsapp_number: string;
-}
-
-const CreateCampaign = () => {
+const BusinessCreateCampaign = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     caption: '',
@@ -32,42 +25,41 @@ const CreateCampaign = () => {
     price: '',
     mediaUrl: '',
     mediaType: 'image' as 'image' | 'video',
-    businessId: '',
   });
 
   useEffect(() => {
-    const fetchBusinesses = async () => {
+    const fetchBusiness = async () => {
+      if (!profile?.id) return;
+
       const { data, error } = await supabase
         .from('businesses')
-        .select('id, business_name, whatsapp_number');
+        .select('id')
+        .eq('owner_id', profile.id)
+        .single();
 
       if (error) {
-        console.error('Error fetching businesses:', error);
+        console.error('Error fetching business:', error);
+        toast({
+          title: "Error",
+          description: "Could not find your business profile",
+          variant: "destructive",
+        });
         return;
       }
 
-      setBusinesses(data || []);
+      setBusinessId(data.id);
     };
 
-    fetchBusinesses();
-  }, []);
+    fetchBusiness();
+  }, [profile?.id, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!profile?.id) {
+    if (!businessId) {
       toast({
         title: "Error",
-        description: "You must be logged in to create a campaign",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.businessId) {
-      toast({
-        title: "Missing information",
-        description: "Please select a business for this campaign",
+        description: "Business profile not found",
         variant: "destructive",
       });
       return;
@@ -76,7 +68,7 @@ const CreateCampaign = () => {
     setLoading(true);
 
     try {
-      // Create campaign
+      // Create campaign (no agent_id - it's open for agents to claim)
       const { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
         .insert({
@@ -86,9 +78,9 @@ const CreateCampaign = () => {
           price: parseFloat(formData.price) || 0,
           media_url: formData.mediaUrl || null,
           media_type: formData.mediaType,
-          business_id: formData.businessId,
-          agent_id: profile.id,
-          status: 'pending',
+          business_id: businessId,
+          agent_id: null,
+          status: 'open', // Available for agents to claim
         })
         .select()
         .single();
@@ -106,10 +98,10 @@ const CreateCampaign = () => {
 
       toast({
         title: "Campaign created!",
-        description: "Your campaign has been submitted for approval.",
+        description: "Your campaign is now open for agents to claim.",
       });
 
-      navigate('/agent/campaigns');
+      navigate('/business/campaigns');
     } catch (error: any) {
       console.error('Error creating campaign:', error);
       toast({
@@ -138,7 +130,7 @@ const CreateCampaign = () => {
           <CardHeader>
             <CardTitle className="text-2xl">Create New Campaign</CardTitle>
             <CardDescription>
-              Fill in the details below to create a new WhatsApp status campaign
+              Create a marketing campaign for agents to promote on WhatsApp Status
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -147,31 +139,12 @@ const CreateCampaign = () => {
                 <Label htmlFor="title">Campaign Title *</Label>
                 <Input
                   id="title"
-                  placeholder="Enter campaign title"
+                  placeholder="e.g., Summer Sale Promotion"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
                   className="input-focus"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="business">Select Business *</Label>
-                <Select
-                  value={formData.businessId}
-                  onValueChange={(value) => setFormData({ ...formData, businessId: value })}
-                >
-                  <SelectTrigger className="input-focus">
-                    <SelectValue placeholder="Select a business" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {businesses.map((business) => (
-                      <SelectItem key={business.id} value={business.id}>
-                        {business.business_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">
@@ -202,21 +175,21 @@ const CreateCampaign = () => {
                 <Label htmlFor="mediaUrl">Media URL</Label>
                 <Input
                   id="mediaUrl"
-                  placeholder="https://example.com/media.jpg"
+                  placeholder="https://example.com/your-promo-image.jpg"
                   value={formData.mediaUrl}
                   onChange={(e) => setFormData({ ...formData, mediaUrl: e.target.value })}
                   className="input-focus"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Enter a direct link to your image or video
+                  Provide a direct link to your promotional image or video
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="caption">Caption</Label>
+                <Label htmlFor="caption">Caption / Message</Label>
                 <Textarea
                   id="caption"
-                  placeholder="Write an engaging caption for your status..."
+                  placeholder="Write the message agents should post with this campaign..."
                   value={formData.caption}
                   onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
                   rows={4}
@@ -228,7 +201,7 @@ const CreateCampaign = () => {
                 <Label htmlFor="ctaText">Call to Action Text</Label>
                 <Input
                   id="ctaText"
-                  placeholder="e.g., Shop Now, Learn More, Book Today"
+                  placeholder="e.g., Shop Now, Visit Us, Call Today"
                   value={formData.ctaText}
                   onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
                   className="input-focus"
@@ -236,11 +209,11 @@ const CreateCampaign = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Campaign Price (₹) *</Label>
+                <Label htmlFor="price">Budget / Agent Payment (₹) *</Label>
                 <Input
                   id="price"
                   type="number"
-                  placeholder="0"
+                  placeholder="Amount you'll pay the agent"
                   min="0"
                   step="0.01"
                   value={formData.price}
@@ -248,6 +221,9 @@ const CreateCampaign = () => {
                   required
                   className="input-focus"
                 />
+                <p className="text-xs text-muted-foreground">
+                  This is the amount you'll pay the agent for completing this campaign
+                </p>
               </div>
 
               <div className="flex gap-4 pt-4">
@@ -261,7 +237,7 @@ const CreateCampaign = () => {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !businessId}
                   className="flex-1 btn-gradient"
                 >
                   {loading ? (
@@ -270,7 +246,7 @@ const CreateCampaign = () => {
                       Creating...
                     </>
                   ) : (
-                    'Create Campaign'
+                    'Publish Campaign'
                   )}
                 </Button>
               </div>
@@ -282,4 +258,4 @@ const CreateCampaign = () => {
   );
 };
 
-export default CreateCampaign;
+export default BusinessCreateCampaign;

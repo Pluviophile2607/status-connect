@@ -6,12 +6,12 @@ import StatCard from '@/components/dashboard/StatCard';
 import CampaignCard from '@/components/dashboard/CampaignCard';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, 
   Clock, 
   CheckCircle, 
   DollarSign,
+  Plus,
   Loader2
 } from 'lucide-react';
 
@@ -23,25 +23,25 @@ interface Campaign {
   media_type: string | null;
   price: number;
   created_at: string;
+  agent_id: string | null;
 }
 
 interface DashboardStats {
   totalCampaigns: number;
-  pendingApproval: number;
-  activeCampaigns: number;
+  openCampaigns: number;
+  pendingReview: number;
   totalSpent: number;
 }
 
 const BusinessDashboard = () => {
   const { profile } = useAuth();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
-    pendingApproval: 0,
-    activeCampaigns: 0,
+    openCampaigns: 0,
+    pendingReview: 0,
     totalSpent: 0,
   });
 
@@ -88,8 +88,8 @@ const BusinessDashboard = () => {
 
         setStats({
           totalCampaigns: allCampaigns?.length || 0,
-          pendingApproval: allCampaigns?.filter(c => c.status === 'pending').length || 0,
-          activeCampaigns: allCampaigns?.filter(c => ['approved', 'live', 'sent'].includes(c.status)).length || 0,
+          openCampaigns: allCampaigns?.filter(c => c.status === 'open').length || 0,
+          pendingReview: allCampaigns?.filter(c => c.status === 'pending_review').length || 0,
           totalSpent,
         });
       } catch (error) {
@@ -101,58 +101,6 @@ const BusinessDashboard = () => {
 
     fetchData();
   }, [profile?.id]);
-
-  const handleApprove = async (campaignId: string) => {
-    try {
-      const { error } = await supabase
-        .from('campaigns')
-        .update({ status: 'approved' })
-        .eq('id', campaignId);
-
-      if (error) throw error;
-
-      setCampaigns(campaigns.map(c => 
-        c.id === campaignId ? { ...c, status: 'approved' } : c
-      ));
-
-      toast({
-        title: "Campaign approved!",
-        description: "The campaign has been approved successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to approve campaign",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleReject = async (campaignId: string) => {
-    try {
-      const { error } = await supabase
-        .from('campaigns')
-        .update({ status: 'draft' })
-        .eq('id', campaignId);
-
-      if (error) throw error;
-
-      setCampaigns(campaigns.map(c => 
-        c.id === campaignId ? { ...c, status: 'draft' } : c
-      ));
-
-      toast({
-        title: "Campaign rejected",
-        description: "The campaign has been sent back as draft.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to reject campaign",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (loading) {
     return (
@@ -168,13 +116,21 @@ const BusinessDashboard = () => {
     <DashboardLayout>
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-            Welcome back, {profile?.name?.split(' ')[0]}!
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your campaigns and track performance
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+              Welcome back, {profile?.name?.split(' ')[0]}!
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Create campaigns and track agent performance
+            </p>
+          </div>
+          <Link to="/business/campaigns/new">
+            <Button className="btn-gradient">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Campaign
+            </Button>
+          </Link>
         </div>
 
         {/* Stats */}
@@ -185,13 +141,13 @@ const BusinessDashboard = () => {
             icon={FileText}
           />
           <StatCard
-            title="Pending Approval"
-            value={stats.pendingApproval}
+            title="Open for Agents"
+            value={stats.openCampaigns}
             icon={Clock}
           />
           <StatCard
-            title="Active Campaigns"
-            value={stats.activeCampaigns}
+            title="Pending Review"
+            value={stats.pendingReview}
             icon={CheckCircle}
           />
           <StatCard
@@ -204,7 +160,7 @@ const BusinessDashboard = () => {
         {/* Recent Campaigns */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Recent Campaigns</h2>
+            <h2 className="text-lg font-semibold text-foreground">Your Campaigns</h2>
             <Link to="/business/campaigns">
               <Button variant="ghost" size="sm">
                 View all
@@ -216,9 +172,15 @@ const BusinessDashboard = () => {
             <div className="dashboard-card text-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold text-foreground mb-2">No campaigns yet</h3>
-              <p className="text-muted-foreground">
-                Campaigns assigned to your business will appear here
+              <p className="text-muted-foreground mb-4">
+                Create your first campaign to attract marketing agents
               </p>
+              <Link to="/business/campaigns/new">
+                <Button className="btn-gradient">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Campaign
+                </Button>
+              </Link>
             </div>
           ) : (
             <div className="space-y-4">
@@ -232,10 +194,8 @@ const BusinessDashboard = () => {
                   mediaType={campaign.media_type || undefined}
                   price={Number(campaign.price)}
                   createdAt={campaign.created_at}
-                  showActions
+                  showActions={campaign.status === 'pending_review'}
                   isBusinessView
-                  onApprove={() => handleApprove(campaign.id)}
-                  onReject={() => handleReject(campaign.id)}
                 />
               ))}
             </div>
