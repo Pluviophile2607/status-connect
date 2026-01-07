@@ -11,11 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { DollarSign, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+type PaymentMode = 'upi' | 'bank_transfer' | 'cash';
+
 interface Payment {
   id: string;
   amount: number;
   payment_status: string;
-  payment_mode: string | null;
+  payment_mode: PaymentMode | null;
   marked_at: string | null;
   created_at: string;
   campaigns: {
@@ -34,7 +36,7 @@ const BusinessPayments = () => {
   const [totalPaid, setTotalPaid] = useState(0);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [markingPayment, setMarkingPayment] = useState<Payment | null>(null);
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>('');
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<PaymentMode | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -281,7 +283,7 @@ const BusinessPayments = () => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Payment Method</label>
-              <Select value={selectedPaymentMode} onValueChange={setSelectedPaymentMode}>
+              <Select value={selectedPaymentMode} onValueChange={(value) => setSelectedPaymentMode(value as PaymentMode)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
