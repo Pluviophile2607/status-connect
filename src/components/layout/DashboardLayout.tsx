@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { 
   MessageSquare, 
   LayoutDashboard, 
-  Plus, 
+  Search, 
   FileText, 
   DollarSign, 
   LogOut,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  CreditCard
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -33,15 +35,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   const agentNavItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/agent/dashboard' },
-    { label: 'Create Campaign', icon: Plus, path: '/agent/campaigns/new' },
+    { label: 'Browse Campaigns', icon: Search, path: '/agent/browse' },
     { label: 'My Campaigns', icon: FileText, path: '/agent/campaigns' },
     { label: 'Earnings', icon: DollarSign, path: '/agent/earnings' },
   ];
 
   const businessNavItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/business/dashboard' },
-    { label: 'Campaigns', icon: FileText, path: '/business/campaigns' },
-    { label: 'Payments', icon: DollarSign, path: '/business/payments' },
+    { label: 'Create Campaign', icon: Plus, path: '/business/campaigns/new' },
+    { label: 'My Campaigns', icon: FileText, path: '/business/campaigns' },
+    { label: 'Payments', icon: CreditCard, path: '/business/payments' },
   ];
 
   const navItems = profile?.role === 'agent' ? agentNavItems : businessNavItems;
@@ -84,7 +87,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{profile?.name}</p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  {profile?.role?.replace('_', ' ')}
+                  {profile?.role === 'business_owner' ? 'Business Owner' : 'Marketing Agent'}
                 </p>
               </div>
             </div>

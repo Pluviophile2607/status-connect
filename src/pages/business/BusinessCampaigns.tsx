@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import CampaignCard from '@/components/dashboard/CampaignCard';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, FileText, Loader2 } from 'lucide-react';
+import { Search, FileText, Loader2, Plus } from 'lucide-react';
 
 interface Campaign {
   id: string;
@@ -16,6 +18,7 @@ interface Campaign {
   media_type: string | null;
   price: number;
   created_at: string;
+  agent_id: string | null;
   campaign_analytics: {
     views: number;
   } | null;
@@ -54,6 +57,7 @@ const BusinessCampaigns = () => {
             media_type,
             price,
             created_at,
+            agent_id,
             campaign_analytics (
               views
             )
@@ -75,6 +79,8 @@ const BusinessCampaigns = () => {
 
   const handleApprove = async (campaignId: string) => {
     try {
+      const campaign = campaigns.find(c => c.id === campaignId);
+      
       const { error } = await supabase
         .from('campaigns')
         .update({ status: 'approved' })
@@ -82,13 +88,31 @@ const BusinessCampaigns = () => {
 
       if (error) throw error;
 
+      // Create payment record when approving
+      if (campaign) {
+        const { data: businessData } = await supabase
+          .from('businesses')
+          .select('id')
+          .eq('owner_id', profile?.id)
+          .single();
+
+        if (businessData) {
+          await supabase.from('payments').insert({
+            campaign_id: campaignId,
+            business_id: businessData.id,
+            amount: campaign.price,
+            payment_status: 'unpaid',
+          });
+        }
+      }
+
       setCampaigns(campaigns.map(c => 
         c.id === campaignId ? { ...c, status: 'approved' } : c
       ));
 
       toast({
         title: "Campaign approved!",
-        description: "The campaign has been approved successfully.",
+        description: "The agent's work has been approved. Please proceed with payment.",
       });
     } catch (error: any) {
       toast({
@@ -103,18 +127,18 @@ const BusinessCampaigns = () => {
     try {
       const { error } = await supabase
         .from('campaigns')
-        .update({ status: 'draft' })
+        .update({ status: 'rejected' })
         .eq('id', campaignId);
 
       if (error) throw error;
 
       setCampaigns(campaigns.map(c => 
-        c.id === campaignId ? { ...c, status: 'draft' } : c
+        c.id === campaignId ? { ...c, status: 'rejected' } : c
       ));
 
       toast({
         title: "Campaign rejected",
-        description: "The campaign has been sent back as draft.",
+        description: "The agent has been notified to make changes.",
       });
     } catch (error: any) {
       toast({
@@ -131,15 +155,37 @@ const BusinessCampaigns = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      draft: 'Draft',
+      open: 'Open for Agents',
+      assigned: 'Agent Assigned',
+      pending_review: 'Pending Your Review',
+      approved: 'Approved',
+      rejected: 'Rejected',
+      live: 'Live',
+      completed: 'Completed',
+    };
+    return labels[status] || status;
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Campaigns</h1>
-          <p className="text-muted-foreground mt-1">
-            Review and manage campaigns assigned to your business
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">My Campaigns</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your marketing campaigns and review agent submissions
+            </p>
+          </div>
+          <Link to="/business/campaigns/new">
+            <Button className="btn-gradient">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Campaign
+            </Button>
+          </Link>
         </div>
 
         {/* Filters */}
@@ -159,7 +205,10 @@ const BusinessCampaigns = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="open">Open for Agents</SelectItem>
+              <SelectItem value="assigned">Agent Assigned</SelectItem>
+              <SelectItem value="pending_review">Pending Review</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="live">Live</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
@@ -178,11 +227,19 @@ const BusinessCampaigns = () => {
             <h3 className="font-semibold text-foreground mb-2">
               {searchTerm || statusFilter !== 'all' ? 'No campaigns found' : 'No campaigns yet'}
             </h3>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               {searchTerm || statusFilter !== 'all'
                 ? 'Try adjusting your filters'
-                : 'Campaigns assigned to your business will appear here'}
+                : 'Create your first campaign to attract marketing agents'}
             </p>
+            {!searchTerm && statusFilter === 'all' && (
+              <Link to="/business/campaigns/new">
+                <Button className="btn-gradient">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Campaign
+                </Button>
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -197,7 +254,7 @@ const BusinessCampaigns = () => {
                 price={Number(campaign.price)}
                 views={campaign.campaign_analytics?.views || 0}
                 createdAt={campaign.created_at}
-                showActions
+                showActions={campaign.status === 'pending_review'}
                 isBusinessView
                 onApprove={() => handleApprove(campaign.id)}
                 onReject={() => handleReject(campaign.id)}

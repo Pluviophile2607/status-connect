@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Calendar, DollarSign, MoreVertical } from 'lucide-react';
+import { Eye, Calendar, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CampaignCardProps {
@@ -14,6 +14,7 @@ interface CampaignCardProps {
   views?: number;
   createdAt: string;
   businessName?: string;
+  agentName?: string;
   onView?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
@@ -22,12 +23,25 @@ interface CampaignCardProps {
 }
 
 const statusStyles: Record<string, string> = {
-  draft: 'status-draft',
-  pending: 'status-pending',
-  approved: 'status-approved',
-  sent: 'status-approved',
-  live: 'status-live',
-  completed: 'status-completed',
+  draft: 'bg-gray-100 text-gray-800',
+  open: 'bg-green-100 text-green-800',
+  assigned: 'bg-blue-100 text-blue-800',
+  pending_review: 'bg-yellow-100 text-yellow-800',
+  approved: 'bg-emerald-100 text-emerald-800',
+  rejected: 'bg-red-100 text-red-800',
+  live: 'bg-purple-100 text-purple-800',
+  completed: 'bg-gray-100 text-gray-800',
+};
+
+const statusLabels: Record<string, string> = {
+  draft: 'Draft',
+  open: 'Open for Agents',
+  assigned: 'Agent Assigned',
+  pending_review: 'Pending Review',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  live: 'Live',
+  completed: 'Completed',
 };
 
 const CampaignCard: React.FC<CampaignCardProps> = ({
@@ -39,6 +53,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
   views = 0,
   createdAt,
   businessName,
+  agentName,
   onView,
   onApprove,
   onReject,
@@ -83,9 +98,12 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
               {businessName && (
                 <p className="text-sm text-muted-foreground mt-0.5">{businessName}</p>
               )}
+              {agentName && (
+                <p className="text-sm text-muted-foreground mt-0.5">Agent: {agentName}</p>
+              )}
             </div>
-            <Badge className={cn('status-badge', statusStyles[status] || 'status-draft')}>
-              {status}
+            <Badge className={cn('status-badge', statusStyles[status] || 'bg-gray-100 text-gray-800')}>
+              {statusLabels[status] || status}
             </Badge>
           </div>
 
@@ -111,7 +129,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
                   View Details
                 </Button>
               )}
-              {isBusinessView && status === 'pending' && (
+              {isBusinessView && status === 'pending_review' && (
                 <>
                   {onApprove && (
                     <Button size="sm" onClick={onApprove} className="btn-gradient">
@@ -120,7 +138,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
                   )}
                   {onReject && (
                     <Button variant="destructive" size="sm" onClick={onReject}>
-                      Reject
+                      Request Changes
                     </Button>
                   )}
                 </>

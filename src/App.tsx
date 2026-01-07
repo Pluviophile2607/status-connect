@@ -13,12 +13,13 @@ import NotFound from "./pages/NotFound";
 
 // Agent Pages
 import AgentDashboard from "./pages/agent/AgentDashboard";
-import CreateCampaign from "./pages/agent/CreateCampaign";
+import AgentBrowseCampaigns from "./pages/agent/AgentBrowseCampaigns";
 import AgentCampaigns from "./pages/agent/AgentCampaigns";
 import AgentEarnings from "./pages/agent/AgentEarnings";
 
 // Business Pages
 import BusinessDashboard from "./pages/business/BusinessDashboard";
+import BusinessCreateCampaign from "./pages/business/BusinessCreateCampaign";
 import BusinessCampaigns from "./pages/business/BusinessCampaigns";
 import BusinessPayments from "./pages/business/BusinessPayments";
 
@@ -45,10 +46,10 @@ const App = () => (
               }
             />
             <Route
-              path="/agent/campaigns/new"
+              path="/agent/browse"
               element={
                 <ProtectedRoute allowedRole="agent">
-                  <CreateCampaign />
+                  <AgentBrowseCampaigns />
                 </ProtectedRoute>
               }
             />
@@ -75,6 +76,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRole="business_owner">
                   <BusinessDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/business/campaigns/new"
+              element={
+                <ProtectedRoute allowedRole="business_owner">
+                  <BusinessCreateCampaign />
                 </ProtectedRoute>
               }
             />

@@ -107,7 +107,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
-          agent_id: string
+          agent_id: string | null
           business_id: string | null
           caption: string | null
           created_at: string
@@ -120,7 +120,7 @@ export type Database = {
           title: string
         }
         Insert: {
-          agent_id: string
+          agent_id?: string | null
           business_id?: string | null
           caption?: string | null
           created_at?: string
@@ -133,7 +133,7 @@ export type Database = {
           title: string
         }
         Update: {
-          agent_id?: string
+          agent_id?: string | null
           business_id?: string | null
           caption?: string | null
           created_at?: string
@@ -265,11 +265,13 @@ export type Database = {
       app_role: "agent" | "business_owner"
       campaign_status:
         | "draft"
-        | "pending"
+        | "open"
+        | "assigned"
+        | "pending_review"
         | "approved"
-        | "sent"
         | "live"
         | "completed"
+        | "rejected"
       media_type: "image" | "video"
       payment_mode: "upi" | "bank_transfer" | "cash"
       payment_status: "unpaid" | "paid"
@@ -403,11 +405,13 @@ export const Constants = {
       app_role: ["agent", "business_owner"],
       campaign_status: [
         "draft",
-        "pending",
+        "open",
+        "assigned",
+        "pending_review",
         "approved",
-        "sent",
         "live",
         "completed",
+        "rejected",
       ],
       media_type: ["image", "video"],
       payment_mode: ["upi", "bank_transfer", "cash"],
