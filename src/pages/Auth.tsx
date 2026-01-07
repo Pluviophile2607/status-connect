@@ -91,7 +91,7 @@ const Auth = () => {
     } else {
       toast({
         title: "Account created!",
-        description: "Welcome to StatusFlow. You are now logged in.",
+        description: "Welcome to AiZboostr. You are now logged in.",
       });
     }
 
@@ -113,7 +113,7 @@ const Auth = () => {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <MessageSquare className="h-10 w-10 text-primary-foreground" />
-            <span className="text-2xl font-bold text-primary-foreground">StatusFlow</span>
+            <span className="text-2xl font-bold text-primary-foreground">AiZboostr</span>
           </div>
           <p className="text-primary-foreground/80 text-lg">
             WhatsApp Status Marketing Platform
@@ -147,7 +147,7 @@ const Auth = () => {
         </div>
 
         <p className="text-primary-foreground/60 text-sm">
-          © 2026 StatusFlow. All rights reserved.
+          © 2026 AiZboostr. All rights reserved.
         </p>
       </div>
 
@@ -157,7 +157,7 @@ const Auth = () => {
           <CardHeader className="text-center pb-2">
             <div className="flex items-center justify-center gap-2 mb-4 lg:hidden">
               <MessageSquare className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold text-foreground">StatusFlow</span>
+              <span className="text-xl font-bold text-foreground">AiZboostr</span>
             </div>
             <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
             <CardDescription className="text-muted-foreground">

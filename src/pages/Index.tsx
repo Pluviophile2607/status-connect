@@ -50,7 +50,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold text-foreground">StatusFlow</span>
+            <span className="text-xl font-bold text-foreground">AiZboostr</span>
           </div>
           <Link to="/auth">
             <Button variant="outline">
@@ -99,7 +99,7 @@ const Index = () => {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">Built for Everyone</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Whether you're a marketing agent or a business owner, StatusFlow has the tools you need.
+              Whether you're a marketing agent or a business owner, AiZboostr has the tools you need.
             </p>
           </div>
 
@@ -192,7 +192,7 @@ const Index = () => {
             Ready to Grow Your Business?
           </h2>
           <p className="text-primary-foreground/80 text-xl mb-8 max-w-2xl mx-auto">
-            Join hundreds of agents and businesses already using StatusFlow to power their WhatsApp marketing.
+            Join hundreds of agents and businesses already using AiZboostr to power their WhatsApp marketing.
           </p>
           <Link to="/auth">
             <Button size="lg" variant="secondary" className="text-lg px-8">
@@ -208,10 +208,10 @@ const Index = () => {
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-primary" />
-            <span className="font-semibold text-foreground">StatusFlow</span>
+            <span className="font-semibold text-foreground">AiZboostr</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2026 StatusFlow. All rights reserved.
+            © 2026 AiZboostr. All rights reserved.
           </p>
         </div>
       </footer>
