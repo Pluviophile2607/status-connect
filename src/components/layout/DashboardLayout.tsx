@@ -55,7 +55,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-6 w-6 text-primary" />
-          <span className="font-semibold text-foreground">StatusFlow</span>
+          <span className="font-semibold text-foreground">AiZboostr</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -74,7 +74,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="p-6 border-b border-border hidden lg:block">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold text-foreground">StatusFlow</span>
+              <span className="text-xl font-bold text-foreground">AiZboostr</span>
             </div>
           </div>
 
