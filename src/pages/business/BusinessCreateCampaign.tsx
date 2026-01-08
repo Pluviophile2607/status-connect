@@ -22,7 +22,8 @@ const BusinessCreateCampaign = () => {
     title: '',
     caption: '',
     ctaText: '',
-    price: '',
+    targetViews: '',
+    budget: '',
     mediaUrl: '',
     mediaType: 'image' as 'image' | 'video',
   });
@@ -68,6 +69,19 @@ const BusinessCreateCampaign = () => {
     setLoading(true);
 
     try {
+      const targetViews = parseInt(formData.targetViews) || 0;
+      const budget = parseFloat(formData.budget) || 0;
+
+      if (targetViews <= 0) {
+        toast({
+          title: "Error",
+          description: "Target views must be greater than 0",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       // Create campaign (no agent_id - it's open for agents to claim)
       const { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
@@ -75,7 +89,9 @@ const BusinessCreateCampaign = () => {
           title: formData.title,
           caption: formData.caption,
           cta_text: formData.ctaText,
-          price: parseFloat(formData.price) || 0,
+          price: budget,
+          target_views: targetViews,
+          pending_views: targetViews, // Initially all views are pending
           media_url: formData.mediaUrl || null,
           media_type: formData.mediaType,
           business_id: businessId,
@@ -209,20 +225,46 @@ const BusinessCreateCampaign = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Budget / Agent Payment (₹) *</Label>
+                <Label htmlFor="targetViews">Target Views *</Label>
                 <Input
-                  id="price"
+                  id="targetViews"
                   type="number"
-                  placeholder="Amount you'll pay the agent"
-                  min="0"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="How many views do you want?"
+                  min="1"
+                  value={formData.targetViews}
+                  onChange={(e) => {
+                    const views = parseInt(e.target.value) || 0;
+                    const calculatedBudget = (views * 0.25).toFixed(2);
+                    setFormData({ 
+                      ...formData, 
+                      targetViews: e.target.value,
+                      budget: calculatedBudget
+                    });
+                  }}
                   required
                   className="input-focus"
                 />
                 <p className="text-xs text-muted-foreground">
-                  This is the amount you'll pay the agent for completing this campaign
+                  Total number of WhatsApp Status views you want for this campaign
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="budget">Total Budget (₹)</Label>
+                <div className="relative">
+                  <Input
+                    id="budget"
+                    type="text"
+                    value={formData.budget ? `₹${formData.budget}` : ''}
+                    readOnly
+                    className="input-focus bg-muted/50"
+                  />
+                </div>
+                <p className="text-xs text-primary font-medium">
+                  Rate: ₹0.25 per view (fixed)
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This budget will be distributed among agents based on views they commit
                 </p>
               </div>
 

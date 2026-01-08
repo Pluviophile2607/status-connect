@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatCard from '@/components/dashboard/StatCard';
 import CampaignCard from '@/components/dashboard/CampaignCard';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, 
@@ -12,7 +13,9 @@ import {
   CheckCircle, 
   DollarSign,
   Plus,
-  Loader2
+  Loader2,
+  Users,
+  Eye
 } from 'lucide-react';
 
 interface Campaign {
@@ -22,8 +25,27 @@ interface Campaign {
   media_url: string | null;
   media_type: string | null;
   price: number;
+  target_views: number;
+  pending_views: number;
   created_at: string;
   agent_id: string | null;
+}
+
+interface AgentClaim {
+  id: string;
+  campaign_id: string;
+  views_committed: number;
+  views_delivered: number;
+  status: string;
+  agent: {
+    name: string;
+    email: string;
+  } | null;
+  campaign: {
+    title: string;
+    target_views: number;
+    price: number;
+  } | null;
 }
 
 interface DashboardStats {
@@ -37,6 +59,7 @@ const BusinessDashboard = () => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [agentClaims, setAgentClaims] = useState<AgentClaim[]>([]);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
@@ -69,7 +92,54 @@ const BusinessDashboard = () => {
           .limit(5);
 
         if (campaignsError) throw campaignsError;
-        setCampaigns(campaignsData || []);
+        setCampaigns((campaignsData || []) as Campaign[]);
+
+        // Fetch all campaigns for this business to get their IDs
+        const { data: allCampaignsData } = await supabase
+          .from('campaigns')
+          .select('id')
+          .eq('business_id', businessData.id);
+
+        const campaignIds = allCampaignsData?.map(c => c.id) || [];
+
+        // Fetch agent claims for these campaigns
+        if (campaignIds.length > 0) {
+          const { data: claimsData } = await supabase
+            .from('agent_campaign_claims' as any)
+            .select(`
+              id,
+              campaign_id,
+              views_committed,
+              views_delivered,
+              status,
+              agent_id
+            `)
+            .in('campaign_id', campaignIds)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          // For each claim, fetch agent profile
+          if (claimsData && claimsData.length > 0) {
+            const agentIds = [...new Set((claimsData as any[]).map(c => c.agent_id))];
+            const { data: profilesData } = await supabase
+              .from('profiles')
+              .select('id, name, email')
+              .in('id', agentIds);
+
+            const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+
+            // Map campaigns to claims
+            const campaignsMap = new Map((campaignsData || []).map((c: any) => [c.id, c]));
+
+            const enrichedClaims = (claimsData as any[]).map(claim => ({
+              ...claim,
+              agent: profilesMap.get(claim.agent_id) || null,
+              campaign: campaignsMap.get(claim.campaign_id) || null
+            }));
+
+            setAgentClaims(enrichedClaims);
+          }
+        }
 
         // Fetch all campaigns for stats
         const { data: allCampaigns } = await supabase
@@ -155,6 +225,66 @@ const BusinessDashboard = () => {
             value={`₹${stats.totalSpent.toLocaleString()}`}
             icon={DollarSign}
           />
+        </div>
+
+        {/* Agent Commitments */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Agent Commitments</h2>
+          </div>
+
+          {agentClaims.length === 0 ? (
+            <div className="dashboard-card text-center py-8">
+              <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+              <h3 className="font-semibold text-foreground mb-1">No agent commitments yet</h3>
+              <p className="text-sm text-muted-foreground">
+                Agents will appear here when they commit to your campaigns
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {agentClaims.map((claim) => (
+                <div key={claim.id} className="dashboard-card">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {claim.agent?.name || 'Unknown Agent'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {claim.campaign?.title || 'Campaign'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="flex items-center gap-1 text-sm">
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            {claim.views_delivered} / {claim.views_committed}
+                          </span>
+                          <span className="text-muted-foreground">views</span>
+                        </div>
+                        <p className="text-sm text-primary font-medium">
+                          ₹{claim.campaign ? ((claim.views_committed / claim.campaign.target_views) * claim.campaign.price).toFixed(0) : 0}
+                        </p>
+                      </div>
+                      <Badge className={
+                        claim.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                        claim.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }>
+                        {claim.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Recent Campaigns */}

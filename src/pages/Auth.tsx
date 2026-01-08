@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -155,10 +155,10 @@ const Auth = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
         <Card className="w-full max-w-md border-border shadow-large animate-fade-in">
           <CardHeader className="text-center pb-2">
-            <div className="flex items-center justify-center gap-2 mb-4 lg:hidden">
+            <Link to="/" className="flex items-center justify-center gap-2 mb-4 lg:hidden hover:opacity-80 transition-opacity">
               <MessageSquare className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold text-foreground">AiZboostr</span>
-            </div>
+            </Link>
             <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
             <CardDescription className="text-muted-foreground">
               Sign in to your account or create a new one
@@ -196,6 +196,14 @@ const Auth = () => {
                       required
                       className="input-focus"
                     />
+                  </div>
+                  <div className="text-right">
+                    <a 
+                      href="/forgot-password" 
+                      className="text-sm text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Forgot Password?
+                    </a>
                   </div>
                   <Button type="submit" className="w-full btn-gradient" disabled={isLoading}>
                     {isLoading ? (
