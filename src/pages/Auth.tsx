@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Users, Briefcase, ArrowRight, Loader2 } from 'lucide-react';
+import { MessageSquare, Users, Briefcase, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -153,7 +153,15 @@ const Auth = () => {
 
       {/* Right side - Auth forms */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
-        <Card className="w-full max-w-md border-border shadow-large animate-fade-in">
+        <div className="w-full max-w-md">
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
+          <Card className="w-full border-border shadow-large animate-fade-in">
           <CardHeader className="text-center pb-2">
             <Link to="/" className="flex items-center justify-center gap-2 mb-4 lg:hidden hover:opacity-80 transition-opacity">
               <MessageSquare className="h-8 w-8 text-primary" />
@@ -326,6 +334,7 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
