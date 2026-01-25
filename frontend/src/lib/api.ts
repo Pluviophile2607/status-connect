@@ -1,5 +1,8 @@
+// frontend/src/lib/api.ts
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
+// 1. Get the API URL from Environment Variables (Best Practice)
+// If VITE_API_URL is missing, it falls back to localhost for development.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
@@ -11,7 +14,10 @@ const getHeaders = () => {
 
 export const api = {
   get: async (endpoint: string, params: Record<string, any> = {}) => {
-    const url = new URL(`${API_URL}${endpoint}`);
+    // 2. Clean up the endpoint to ensure valid URL
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = new URL(`${API_URL}${cleanEndpoint}`);
+    
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     
     const response = await fetch(url.toString(), {
@@ -27,7 +33,8 @@ export const api = {
   },
 
   post: async (endpoint: string, body: any) => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(body),
@@ -41,7 +48,8 @@ export const api = {
   },
 
   put: async (endpoint: string, body: any) => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
       method: 'PUT',
       headers: getHeaders(),
       body: JSON.stringify(body),
@@ -49,7 +57,6 @@ export const api = {
 
     if (!response.ok) {
         const text = await response.text();
-        console.error('API Error Response:', response.status, text);
         try {
             const error = JSON.parse(text);
             throw new Error(error.message || 'API request failed');
@@ -61,7 +68,8 @@ export const api = {
   },
 
   delete: async (endpoint: string) => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
       method: 'DELETE',
       headers: getHeaders(),
     });
@@ -71,5 +79,5 @@ export const api = {
         throw new Error(error.message || 'API request failed');
     }
     return response.json();
-  },
+  }
 };
