@@ -1,7 +1,7 @@
 // frontend/src/lib/api.ts
 
-// 1. Point explicitly to the Backend URL.
-// If VITE_API_URL is not found, default to localhost (Development mode)
+// 1. Get the API URL from Environment Variables (Best Practice)
+// If VITE_API_URL is missing, it falls back to localhost for development.
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getHeaders = () => {
@@ -14,7 +14,7 @@ const getHeaders = () => {
 
 export const api = {
   get: async (endpoint: string, params: Record<string, any> = {}) => {
-    // Ensure we don't get double slashes if endpoint starts with /
+    // 2. Clean up the endpoint to ensure valid URL
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = new URL(`${API_URL}${cleanEndpoint}`);
     
@@ -79,5 +79,5 @@ export const api = {
         throw new Error(error.message || 'API request failed');
     }
     return response.json();
-  },
+  }
 };
