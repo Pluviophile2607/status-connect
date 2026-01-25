@@ -1,8 +1,7 @@
 // frontend/src/lib/api.ts
 
-// 1. Strict Environment Variable Logic
-// In Production (Vercel/Netlify), this uses the VITE_API_URL variable you set.
-// In Development (Local), it defaults to localhost:5000 unless you override it in .env
+// 1. Point explicitly to the Backend URL.
+// If VITE_API_URL is not found, default to localhost (Development mode)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getHeaders = () => {
@@ -15,7 +14,10 @@ const getHeaders = () => {
 
 export const api = {
   get: async (endpoint: string, params: Record<string, any> = {}) => {
-    const url = new URL(`${API_URL}${endpoint}`);
+    // Ensure we don't get double slashes if endpoint starts with /
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = new URL(`${API_URL}${cleanEndpoint}`);
+    
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     
     const response = await fetch(url.toString(), {
@@ -31,7 +33,8 @@ export const api = {
   },
 
   post: async (endpoint: string, body: any) => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(body),
@@ -45,7 +48,8 @@ export const api = {
   },
 
   put: async (endpoint: string, body: any) => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
       method: 'PUT',
       headers: getHeaders(),
       body: JSON.stringify(body),
@@ -64,7 +68,8 @@ export const api = {
   },
 
   delete: async (endpoint: string) => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
       method: 'DELETE',
       headers: getHeaders(),
     });
