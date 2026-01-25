@@ -46,6 +46,20 @@ app.get('/', (req, res) => {
   res.send('Backend is running!');
 });
 
+app.get('/api/health', (req, res) => {
+  const mongoose = require('mongoose');
+  res.json({
+    status: 'ok',
+    timestamp: new Date(),
+    env: {
+      jwt_secret_configured: !!process.env.JWT_SECRET,
+      mongo_uri_configured: !!process.env.MONGO_URI,
+      frontend_url: process.env.FRONTEND_URL
+    },
+    db_state: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
