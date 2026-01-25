@@ -1,5 +1,9 @@
+// frontend/src/lib/api.ts
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
+// 1. Strict Environment Variable Logic
+// In Production (Vercel/Netlify), this uses the VITE_API_URL variable you set.
+// In Development (Local), it defaults to localhost:5000 unless you override it in .env
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
@@ -49,7 +53,6 @@ export const api = {
 
     if (!response.ok) {
         const text = await response.text();
-        console.error('API Error Response:', response.status, text);
         try {
             const error = JSON.parse(text);
             throw new Error(error.message || 'API request failed');
