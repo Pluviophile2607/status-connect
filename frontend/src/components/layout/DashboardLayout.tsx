@@ -18,6 +18,9 @@ import {
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
+// Import the logo
+import aizLogo from '@/assets/aiz-logo.jpeg';
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -67,8 +70,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-6 w-6 text-primary" />
-          <span className="font-semibold text-foreground">AiZboostr</span>
+          <img src={aizLogo} alt="Aizboostr Logo" className="h-8 w-8 rounded-lg object-cover" />
+          <span className="font-semibold text-foreground">Aizboostr</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -86,8 +89,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {/* Logo */}
           <div className="p-6 border-b border-border hidden lg:block">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold text-foreground">AiZboostr</span>
+              <img src={aizLogo} alt="Aizboostr Logo" className="h-10 w-10 rounded-lg object-cover" />
+              <span className="text-xl font-bold text-foreground">Aizboostr</span>
             </div>
           </div>
 
